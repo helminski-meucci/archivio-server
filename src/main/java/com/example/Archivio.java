@@ -12,6 +12,7 @@ import java.nio.charset.StandardCharsets;
 
 public class Archivio extends Thread {
     private Socket s;
+    private String[] extensions = { "txt", "md", "csv" };
 
     public Archivio(Socket s) {
         this.s = s;
@@ -30,7 +31,7 @@ public class Archivio extends Thread {
 
                 String[] parts = cmd.trim().split("\\s+");
                 
-                if (cmd.isEmpty() || parts.length != 2 || !validateName(parts[1])) {
+                if (cmd.isEmpty() || parts.length != 2 || !validateName(parts[1]) || !validateExtension(parts[1])) {
                     out.println("ERR SYNTAX");
                 } else if (!parts[0].equals("LEGGI")) {
                     out.println("ERR UNKNOWNCMD");
@@ -43,7 +44,7 @@ public class Archivio extends Thread {
                         try (BufferedReader lettoreFile = new BufferedReader(
                                 new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
                             out.println("OK FILE"); connection = false;
-                            out.println(); // Riga vuota
+                            out.println("TYPE " + parts[1].substring(parts[1].indexOf(".")+1)); // Riga vuota
 
                             String riga;
                             while ((riga = lettoreFile.readLine()) != null) {
@@ -66,13 +67,19 @@ public class Archivio extends Thread {
     }
 
     public boolean validateName(String filename) {
-        String[] notallow = { "\\", "/", "..", " " };
+        String[] notallow = { "\\", "/", "..", ".", " " };
         for (String c : notallow) {
             if (filename.contains(c))
                 return false;
         }
-        if (!filename.contains(".txt"))
-            return false;
         return true;
+    }
+
+    public boolean validateExtension(String filename) {
+        String ext = filename.substring(filename.indexOf(".")+1);
+        for(String e : extensions){
+            if(ext.equals(e)) return true;
+        }
+        return false;
     }
 }
