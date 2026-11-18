@@ -50,6 +50,7 @@ public class Archivio extends Thread {
                                 out.println(riga);
                             }
                         } catch (IOException e) {
+                            out.println("ERR READ");
                             e.printStackTrace();
                             // Gestite l'errore distinguendo se lo stato è già stato inviato.
                         }
