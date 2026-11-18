@@ -1,0 +1,10 @@
+----------------
+orario scolastico
+lunedi 8:00-14:00
+martedi 8:00-14:40
+mercoledi 8:00-14:00
+giovedi 8:00-14:40
+venerdi 8:00-14:00
+
+l'orario può subire modifiche
+FINE
