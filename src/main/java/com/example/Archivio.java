@@ -31,20 +31,22 @@ public class Archivio extends Thread {
 
                 String[] parts = cmd.trim().split("\\s+");
                 
-                if (cmd.isEmpty() || parts.length != 2 || !validateName(parts[1]) || !validateExtension(parts[1])) {
+                if (cmd.isEmpty() || parts.length != 2 || !validateName(parts[1])) {
                     out.println("ERR SYNTAX");
                 } else if (!parts[0].equals("LEGGI")) {
                     out.println("ERR UNKNOWNCMD");
                 } else {
                     File cartella = new File("documenti");
-                    File file = new File(cartella, parts[1]);
+                    Object[] res = validateExtension(cartella, parts[1]);
 
-                    System.out.println(file.getAbsolutePath()); // Utile durante le prove
-                    if (file.isFile()) {
+                    if (res != null) {
+                        File file = (File) res[0];
+                        System.out.println(file.getAbsolutePath()); 
                         try (BufferedReader lettoreFile = new BufferedReader(
                                 new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
                             out.println("OK FILE"); connection = false;
-                            out.println("TYPE " + parts[1].substring(parts[1].indexOf(".")+1)); // Riga vuota
+                            out.println("TYPE " + (String) res[1]); 
+                            out.println(""); // Riga vuota
 
                             String riga;
                             while ((riga = lettoreFile.readLine()) != null) {
@@ -75,11 +77,11 @@ public class Archivio extends Thread {
         return true;
     }
 
-    public boolean validateExtension(String filename) {
-        String ext = filename.substring(filename.indexOf(".")+1);
+    public Object[] validateExtension(File cartella, String filename) {
         for(String e : extensions){
-            if(ext.equals(e)) return true;
+            File file = new File(cartella, filename + "." + e);
+            if(file.isFile()) return new Object[]{file, e};
         }
-        return false;
+        return null;
     }
 }
