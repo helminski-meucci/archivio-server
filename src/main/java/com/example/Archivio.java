@@ -9,6 +9,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 
 public class Archivio extends Thread {
     private Socket s;
@@ -45,23 +46,30 @@ public class Archivio extends Thread {
                     Object[] res = validateExtension(cartella, parts[1]);
 
                     if (res != null) {
-                        File file = (File) res[0];
-                        System.out.println(file.getAbsolutePath()); 
-                        try (BufferedReader lettoreFile = new BufferedReader(
-                                new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
-                            out.println("OK FILE"); connection = false;
-                            
-                            out.println("Content-Type: " + (String) res[1]); 
-                            out.println(""); // Riga vuota
+                        if(res[0].equals("EXTERR")){
+                            out.println("ERR SYNTAX");
+                        }else{
+                            File file = (File) res[0];
+                            System.out.println(file.getAbsolutePath()); 
+                            try (BufferedReader lettoreFile = new BufferedReader(
+                                    new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
+                                
+                                byte[] dati = Files.readAllBytes(file.toPath());
+                                String contenuto = new String(dati, StandardCharsets.UTF_8);
 
-                            String riga;
-                            while ((riga = lettoreFile.readLine()) != null) {
-                                out.println(riga);
+                                out.println("OK FILE"); connection = false;
+                                
+                                out.println("Content-Type: " + (String) res[1]); 
+                                out.println("Content-Length: " + dati.length);
+                                out.println(); // Riga vuota
+                                out.print(contenuto);
+                                out.flush();
+
+                            } catch (IOException e) {
+                                out.println("ERR READ");
+                                e.printStackTrace();
+                                // Gestite l'errore distinguendo se lo stato è già stato inviato.
                             }
-                        } catch (IOException e) {
-                            out.println("ERR READ");
-                            e.printStackTrace();
-                            // Gestite l'errore distinguendo se lo stato è già stato inviato.
                         }
                     } else {
                         out.println("ERR NOTFOUND");
@@ -75,10 +83,9 @@ public class Archivio extends Thread {
     }
 
     public boolean validateName(String filename) {
-        String[] notallow = { "\\", "/", "..", ".", " " };
+        String[] notallow = { "\\", "/", "..", " " };
         for (String c : notallow) {
-            if (filename.contains(c))
-                return false;
+            if (filename.contains(c)) return false;
         }
         return true;
     }
@@ -88,6 +95,9 @@ public class Archivio extends Thread {
             File file = new File(cartella, filename + "." + e[0]);
             if(file.isFile()) return new Object[]{file, e[1]};
         }
+        File file = new File(cartella, filename);
+        if(file.isFile()) return new Object[]{"EXTERR"};
+
         return null;
     }
 }
