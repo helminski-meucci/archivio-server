@@ -12,7 +12,12 @@ import java.nio.charset.StandardCharsets;
 
 public class Archivio extends Thread {
     private Socket s;
-    private String[] extensions = { "txt", "md", "csv" };
+    // private String[] extensions = { "txt", "md", "csv" };
+    private String[][] TIPI = {
+                                {"txt", "text/plain; charset=utf-8"},
+                                {"md",  "text/markdown; charset=utf-8"},
+                                {"csv", "text/csv; charset=utf-8"},
+                            };
 
     public Archivio(Socket s) {
         this.s = s;
@@ -45,7 +50,8 @@ public class Archivio extends Thread {
                         try (BufferedReader lettoreFile = new BufferedReader(
                                 new InputStreamReader(new FileInputStream(file), StandardCharsets.UTF_8))) {
                             out.println("OK FILE"); connection = false;
-                            out.println("TYPE " + (String) res[1]); 
+                            
+                            out.println("Content-Type: " + (String) res[1]); 
                             out.println(""); // Riga vuota
 
                             String riga;
@@ -78,9 +84,9 @@ public class Archivio extends Thread {
     }
 
     public Object[] validateExtension(File cartella, String filename) {
-        for(String e : extensions){
-            File file = new File(cartella, filename + "." + e);
-            if(file.isFile()) return new Object[]{file, e};
+        for(String[] e : TIPI){
+            File file = new File(cartella, filename + "." + e[0]);
+            if(file.isFile()) return new Object[]{file, e[1]};
         }
         return null;
     }
